@@ -2,7 +2,7 @@
 
 This is a port of [Layer Diffuse](https://github.com/layerdiffusion/LayerDiffuse), from the [SD Forge extension](https://github.com/layerdiffusion/sd-forge-layerdiffuse) to Hugging Face Diffusers.
 
-It focuses on SDXL and RGBA image generation.
+It focuses on SDXL and transparent PNG image generation.
 
 ## TL;DR
 
@@ -17,11 +17,10 @@ python demo_sdxl_attn.py \
       --prompt "portrait of woman in suit with messy hair, high resolution, photorealistic, uniform textureless background" \
       --negative_prompt "ugly, bad, shadow, artifact, blurry"
 ```
-![portrait of woman in suit with messy hair, high resolution, photorealistic, uniform textureless background](./examples/sdxl_layerdiffuse_00.png)
+<img src="./examples/sdxl_layerdiffuse_00.png" alt="portrait of woman in suit with messy hair, high resolution, photorealistic, uniform textureless background" style="max-width: 512px; max-height: 512px;">
 
-## Details
-
-### Demo
+## Inference
+### Snippet
 ``` python
 from diffusers_extension.pipeline_stable_diffusion_xl_layer_diffuse import StableDiffusionXLLayerDiffusePipeline
 
@@ -41,13 +40,12 @@ images = pipeline(
 ).images
 
 images[0].save("sdxl_layerdiffuse_result.png")
-
 ```
 
-### Implementation
+### Demo
+Check out [demo_sdxl_attn.py](./demo_sdxl_attn.py) for the complete demo.
 
-
-### Full arguments list
+Full arguments list:
 ```
 python demo_sdxl_attn.py \
       --seed SEED \
@@ -61,3 +59,19 @@ python demo_sdxl_attn.py \
       --output_path OUTPUT_PATH \
       --disable_memory_optim
 ```
+
+## Implementation details
+I created a class `StableDiffusionXLLayerDiffusePipeline` ([code here](./diffusers_extension/pipeline_stable_diffusion_xl_layer_diffuse.py)) deriving from `diffusers.StableDiffusionXLPipeline`.
+
+`StableDiffusionXLLayerDiffusePipeline` can still be initialized with `.from_pretrained()`, as one would do for `diffusers.StableDiffusionXLPipeline`.
+
+Additionally, this new class takes care of:
+- Loading the rank-256 LoRA `layer_xl_transparent_attn.safetensors` to turn SDXL into a transparent image generator
+  - It will change the latent distribution of the model to a "transparent latent space" that can be decoded by the special VAE pipeline
+- Loading `vae_transparent_decoder.safetensors`
+  - This is an image decoder that takes SDXL VAE outputs and latent image as inputs, and outputs a real PNG image
+- Overload the pipeline's `__call__()` method to automatically forward the output of SDXL (latent + image w/ uniform background) to the VAE Transparent Decoder 
+
+
+![StableDiffusionXLLayerDiffusePipeline class diagram](./assets/StableDiffusionXLLayerDiffusePipeline_diagram.png)
+
