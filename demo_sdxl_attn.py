@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def handle_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--seed', type=int, default=-1)
+    parser.add_argument('-s', '--seed', type=int, default=42)
     parser.add_argument('-b', '--batch_size', type=int, default=1)
     parser.add_argument('-g', '--guidance_scale', type=float, default=5.0)
     parser.add_argument('-i', '--num_inference_steps', type=int, default=20)
