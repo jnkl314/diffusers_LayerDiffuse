@@ -314,7 +314,7 @@ class StableDiffusionXLLayerDiffusePipeline(StableDiffusionXLPipeline):
             image = self._decode_latent(latents)
 
             # Denormalize image
-            image = image + 1.0 / 2.0
+            image = (image + 1.0) / 2.0
 
             # (Optional) Post process intermediary image
             if return_intermediary_image:
