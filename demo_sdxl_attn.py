@@ -19,9 +19,12 @@ def handle_args() -> argparse.Namespace:
     parser.add_argument('-i', '--num_inference_steps', type=int, default=20)
     parser.add_argument('--width', type=int, default=1024)
     parser.add_argument('--height', type=int, default=1024)
-    parser.add_argument('-p', '--prompt', type=str, default="an apple, high resolution")
-    parser.add_argument('-n', '--negative_prompt', type=str, default="ugly, bad, shadow")
+    parser.add_argument('-p', '--prompt', type=str,
+                        default="portrait of woman in suit with messy hair, high resolution, photorealistic, uniform textureless background")
+    parser.add_argument('-n', '--negative_prompt', type=str,
+                        default="ugly, bad, shadow, artifact, blurry")
     parser.add_argument('-o', '--output_path', type=str, default="./")
+    parser.add_argument('--disable_memory_optim', action="store_true")
 
     args = parser.parse_args()
     return args
@@ -31,33 +34,27 @@ def main(args: argparse.Namespace):
 
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_built() else "cpu"
 
-    # pipeline = StableDiffusionXLLayerDiffusePipeline.from_pretrained(
-    #     "stabilityai/stable-diffusion-xl-base-1.0",
-    #     torch_dtype=torch.float16,
-    #     variant="fp16",
-    # )
     pipeline = StableDiffusionXLLayerDiffusePipeline.from_pretrained(
-        "RunDiffusion/Juggernaut-XL-v6",
+        "stabilityai/stable-diffusion-xl-base-1.0",
         torch_dtype=torch.float16,
+        variant="fp16",
     )
-    # sdxl_finetune_local_path = load_file_from_url(
-    #     "https://huggingface.co/bluepen5805/anima_pencil-XL/resolve/main/anima_pencil-XL-v1.0.0.safetensors?download=true"
-    # )
-    # pipeline = StableDiffusionXLLayerDiffusePipeline.from_single_file(sdxl_finetune_local_path)   
 
     # Move to device
     pipeline.to(device)
 
     # Enable options to reduce memory consumption
-    pipeline.enable_vae_tiling()
-    pipeline.enable_vae_slicing()
-    if torch.cuda.is_available():
-        pipeline.enable_xformers_memory_efficient_attention()
+    if not args.disable_memory_optim:
+        pipeline.enable_vae_tiling()
+        pipeline.enable_vae_slicing()
+        if torch.cuda.is_available():
+            pipeline.enable_xformers_memory_efficient_attention()
 
     if not torch.cuda.is_available():
         pipeline.to(torch.float32)
 
-    gen = torch.Generator(device="cuda" if torch.cuda.is_available() else "cpu").manual_seed(12345)
+    # Initialize generator
+    gen = torch.Generator(device="cuda" if torch.cuda.is_available() else "cpu").manual_seed(args.seed)
 
     # Inference through pipeline, including patched SDXL VAE with LayerDiffuse + LayerDiffuse's UNet
     images = pipeline(
