@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional, Union, List, Dict, Any, Tuple, Callable
 
@@ -13,6 +14,10 @@ from transformers import CLIPTextModel, CLIPTextModelWithProjection, CLIPTokeniz
 
 from diffusers_extension.models import TransparentVAEDecoder
 from diffusers_extension.utils import load_file_from_url
+
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class StableDiffusionXLLayerDiffusePipeline(StableDiffusionXLPipeline):
@@ -65,6 +70,12 @@ class StableDiffusionXLLayerDiffusePipeline(StableDiffusionXLPipeline):
         return super(StableDiffusionXLLayerDiffusePipeline, self).to(device)
 
     def create_layer_xl_transparent_attn_for_diffusers(self) -> str:
+        """
+        - Download the checkpoint layer_xl_transparent_attn.safetensors from LayerDiffusion/layerdiffusion-v1
+        - Convert the name of the layers from SD Forge convention to Diffusers'
+        - Save the modified checkpoint locally
+        :return: Path of the modified checkpoint
+        """
         layer_xl_transparent_attn_model_expected_path = os.path.join(
             self.layer_model_cache_directory,
             "layer_xl_transparent_attn.safetensors"
@@ -72,10 +83,10 @@ class StableDiffusionXLLayerDiffusePipeline(StableDiffusionXLPipeline):
 
         new_layer_xl_transparent_attn_model_path = os.path.join(
             os.path.dirname(layer_xl_transparent_attn_model_expected_path),
-            f"diffusers_format_{os.path.basename(layer_xl_transparent_attn_model_expected_path)}"
+            f"[diffusers_format]_{os.path.basename(layer_xl_transparent_attn_model_expected_path)}"
         )
 
-        # Only download and convert model if it doesn't exist locally
+        # Only download and convert model if it doesn't already exist locally
         if not os.path.exists(new_layer_xl_transparent_attn_model_path):
             layer_xl_transparent_attn_model_path = load_file_from_url(
                 url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_attn.safetensors",
@@ -139,7 +150,7 @@ class StableDiffusionXLLayerDiffusePipeline(StableDiffusionXLPipeline):
                 new_layer_lora_model[new_layer_name] = layer
 
             # Save checkpoint with new key names
-            print(f"Write {new_layer_xl_transparent_attn_model_path}")
+            logger.info(f"Write {new_layer_xl_transparent_attn_model_path}")
             safetensors.torch.save_file(new_layer_lora_model, new_layer_xl_transparent_attn_model_path)
 
             # Release layer_lora_model
@@ -152,7 +163,7 @@ class StableDiffusionXLLayerDiffusePipeline(StableDiffusionXLPipeline):
         layer_xl_transparent_attn_model_path = self.create_layer_xl_transparent_attn_for_diffusers()
 
         # Load new checkpoint with correct key names
-        print(f"Load lora {layer_xl_transparent_attn_model_path}")
+        logger.info(f"Load lora {layer_xl_transparent_attn_model_path}")
         self.load_lora_weights(layer_xl_transparent_attn_model_path)
 
     def load_transparent_vae_decoder(self) -> TransparentVAEDecoder:

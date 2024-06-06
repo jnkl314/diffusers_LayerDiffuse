@@ -1,10 +1,14 @@
 import argparse
+import logging
 import os
 
 import torch
 
 from diffusers_extension.pipeline_stable_diffusion_xl_layer_diffuse import StableDiffusionXLLayerDiffusePipeline
-from diffusers_extension.utils import load_file_from_url
+
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 def handle_args() -> argparse.Namespace:
@@ -71,7 +75,7 @@ def main(args: argparse.Namespace):
     # Save image(s)
     for bs_idx in range(args.batch_size):
         output_file_path = os.path.join(args.output_path, f"sdxl_layerdiffuse_{bs_idx:02}.png")
-        print(f"Write {output_file_path}")
+        logger.info(f"Write {output_file_path}")
         images[bs_idx].save(output_file_path)
 
 
