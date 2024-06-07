@@ -1,8 +1,10 @@
 # LayerDiffuse with SDXL for Hugging Face Diffusers
 
-This is a port of [Layer Diffuse](https://github.com/layerdiffusion/LayerDiffuse), from the [SD Forge extension](https://github.com/layerdiffusion/sd-forge-layerdiffuse) to Hugging Face Diffusers.
+Original paper: [Transparent Image Layer Diffusion using Latent Transparency](https://arxiv.org/abs/2402.17113) by Lvmin Zhang, Maneesh Agrawala
 
-It focuses on SDXL and transparent PNG image generation.
+This is a port of [Layer Diffuse](https://github.com/layerdiffusion/LayerDiffuse) from the [SD Forge WebUI extension](https://github.com/layerdiffusion/sd-forge-layerdiffuse) to Hugging Face Diffusers framework.
+
+This port only focuses on SDXL and transparent PNG image generation.
 
 ## TL;DR
 
