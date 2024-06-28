@@ -24,6 +24,7 @@ python demo_sdxl_attn.py \
 ## Inference
 ### Snippet
 ``` python
+import torch
 from diffusers_extension.pipeline_stable_diffusion_xl_layer_diffuse import StableDiffusionXLLayerDiffusePipeline
 
 pipeline = StableDiffusionXLLayerDiffusePipeline.from_pretrained(
